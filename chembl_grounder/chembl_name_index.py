@@ -373,7 +373,7 @@ class ChemblNameIndex():
             with open(f'{self.data_dir}/name2substances.pkl', 'rb') as f:
                 self.name2substances = pickle.load(f)
             with open(f'{self.data_dir}/substance2names.pkl', 'rb') as f:
-                self.substance2names = {self.chembl_index.ChemblIdent(*k):vs for k,vs in pickle.load(f).items()}
+                self.substance2names = {chembl_ident.ChemblIdent(*k):vs for k,vs in pickle.load(f).items()}
             with open(f'{self.data_dir}/filtered_name2substances.pkl', 'rb') as f:
                 self.filtered_name2substances = pickle.load(f)
         except:
