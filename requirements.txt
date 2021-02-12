@@ -1,0 +1,12 @@
+itertools
+tqdm
+cx_Oracle
+sqlalchemy
+rdkit
+sqlite3
+zipfile
+gzip
+
+inchicompare  # https://github.com/timrozday/inchicompare.git
+chembl_structure_pipeline  # https://github.com/chembl/ChEMBL_Structure_Pipeline.git
+chembl_ident
