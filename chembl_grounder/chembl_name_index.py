@@ -25,12 +25,7 @@ class ChemblNameIndex():
             self.chembl_index = chembl_index
         
         try:
-            with open(f'{self.data_dir}/name2substances.pkl', 'rb') as f:
-                self.name2substances = pickle.load(f)
-            with open(f'{self.data_dir}/substance2names.pkl', 'rb') as f:
-                self.substance2names = pickle.load(f)
-            with open(f'{self.data_dir}/filtered_name2substances.pkl', 'rb') as f:
-                self.filtered_name2substances = pickle.load(f)
+            self.load_query_index()
         except:
             self.name2substances = None
             self.substance2names = None
