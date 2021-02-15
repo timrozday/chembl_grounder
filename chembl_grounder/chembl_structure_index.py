@@ -198,14 +198,21 @@ class ChemblStructureIndex():
             r.update(self.split_inchi_index[inchi])
         return r
     
-    def query(self, inchi, connectivity=True, strip=True, consistency=True, split=True):
+    def is_active(self, inchi):
+        stripped_inchi = ic.strip_inchi(inchi, exclude_inchis=self.conn_split_inactive_inchis)  # filter inchi
+        return bool(stripped_inchi)
+    
+    def query(self, inchi, connectivity=True, strip=True, consistency=True, split=True, inactive=False):
         if strip:
             try:
                 stripped_inchi = ic.strip_inchi(inchi, exclude_inchis=self.conn_split_inactive_inchis)  # filter inchi
                 assert bool(stripped_inchi)
                 inchi = stripped_inchi
             except:
-                pass
+                if inactive == False:
+                    return None
+                else:
+                    pass
         
         if split:
             mol = rdkit.Chem.MolFromInchi(inchi)
