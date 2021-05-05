@@ -384,6 +384,9 @@ class ChemblNameIndex():
         if self.name2substances is None:
             self.load_query_index()
         
+        if q is None:
+            return None
+        
         if filter_name:
             filtered_q = self.filter_name(q)
             if bool(filtered_q):
@@ -429,7 +432,10 @@ class ChemblNameIndex():
             s = re.sub('\s+$', '', s)
             s = re.sub('^\s+', '', s)
             return s
-
+        
+        if s is None:
+            return ''
+        
         s = s.lower()
         if re.match('.*(\s|^)\(.*\)(\s|$).*', s):
             s = re.sub('(\s|^)\(.*\)(\s|$)', ' ', s)
