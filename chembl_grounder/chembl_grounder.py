@@ -141,9 +141,9 @@ class ChemblGrounder():
             print(gsrs_inchi)
             raise e
         if r:
-            for chembl_ident,(consistency,evidence) in r.items():
-                if consistency:
-                    results.append((chembl_ident, evidence))
+            for chembl_ident,(rem1,matches,rem2) in r.items():
+                if (not (rem1 or rem2)) and matches:
+                    results.append((chembl_ident, (rem1,matches,rem2)))
 
         return gsrs_inchi, results
 
