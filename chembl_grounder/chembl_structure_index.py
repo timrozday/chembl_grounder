@@ -6,6 +6,7 @@ from inchicompare import inchicompare as ic  # https://github.com/timrozday/inch
 from collections import defaultdict
 import rdkit
 from tqdm.auto import tqdm
+import itertools as it
 
 import chembl_ident
 
