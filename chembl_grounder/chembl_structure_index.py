@@ -32,7 +32,21 @@ class ChemblStructureIndex():
         return self.chembl_db
 
     def load_inactive_compounds(self, data_dir=None):
-                
+        def trim_whitespace(s):
+            while True:
+                if s[-1:] in {'\n', '\r', '\t', ' '}:
+                    s = s[:-1]
+                else:
+                    break
+
+            while True:
+                if s[:1] in {'\n', '\r', '\t', ' '}:
+                    s = s[1:]
+                else:
+                    break
+
+            return s
+        
         if data_dir is None:
             data_dir = self.data_dir
             
@@ -44,11 +58,11 @@ class ChemblStructureIndex():
             
         with open(f"{data_dir}/salts.smi", 'rt') as f:
             cols = ['name', 'smiles'] 
-            salts = [{cols[i]:v for i,v in enumerate(l.split('\t'))} for l in f]
+            salts = [{cols[i]:trim_whitespace(v) for i,v in enumerate(l.split('\t'))} for l in f]
 
         with open(f"{data_dir}/solvents.smi", 'rt') as f:
             cols = ['name', 'smiles'] 
-            solvents = [{cols[i]:v for i,v in enumerate(l.split('\t'))} for l in f]
+            solvents = [{cols[i]:trim_whitespace(v) for i,v in enumerate(l.split('\t'))} for l in f]
         
         salts_inchi = set()
         for d in salts:
