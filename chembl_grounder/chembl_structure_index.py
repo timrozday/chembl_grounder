@@ -41,6 +41,35 @@ class ChemblStructureIndex():
             self.exclude_inchis = set(json.load(f))
         with open(f"{data_dir}/split_inactive_inchis.json", 'rt') as f:
             self.split_inactive_inchis = set(json.load(f))
+            
+        with open(f"{data_dir}/salts.smi", 'rt') as f:
+            cols = ['name', 'smiles'] 
+            salts = [{cols[i]:v for i,v in enumerate(l.split('\t'))} for l in f]
+
+        with open(f"{data_dir}/solvents.smi", 'rt') as f:
+            cols = ['name', 'smiles'] 
+            solvents = [{cols[i]:v for i,v in enumerate(l.split('\t'))} for l in f]
+        
+        salts_inchi = set()
+        for d in salts:
+            try:
+                mol = rdkit.Chem.MolFromSmiles(d['smiles'])
+                inchi = rdkit.Chem.MolToInchi(mol)
+                salts_inchi.add(inchi)
+            except Exception as e:
+                pass
+        
+        solvents_inchi = set()
+        for d in solvents:
+            try:
+                mol = rdkit.Chem.MolFromSmiles(d['smiles'])
+                inchi = rdkit.Chem.MolToInchi(mol)
+                solvents_inchi.add(inchi)
+            except Exception as e:
+                pass
+        
+        self.split_inactive_inchis.update(salts_inchi)
+        self.split_inactive_inchis.update(solvents_inchi)
         
         self.conn_split_inactive_inchis = {ic.inchi_conn_layer(i) for i in self.split_inactive_inchis}
         
