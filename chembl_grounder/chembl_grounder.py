@@ -128,7 +128,7 @@ class ChemblGrounder():
         if 1 in data:
             return data[1][0]
 
-    def lookup_ingredient_structure(self, unii):
+    def lookup_ingredient_structure(self, unii, filter_layers={'q', 'i', 'f', 'p', 't', 'm', 'b', 's'}):
         results = []
         try:
             gsrs_inchi = self.gsrs_index.get_inchi(unii)['standardised']
@@ -136,7 +136,7 @@ class ChemblGrounder():
             return None, None
 
         try:
-            r = self.structure_index.query(gsrs_inchi, connectivity=True, strip=True, consistency=True, split=True)
+            r = self.structure_index.query(gsrs_inchi, connectivity=True, strip=True, consistency=True, split=True, filter_layers=filter_layers)
         except Exception as e:
             print(gsrs_inchi)
             raise e
@@ -170,12 +170,12 @@ class ChemblGrounder():
         results = {k1:{k2:v2 for k2,v2 in v1.items()} for k1,v1 in results.items()}
         return results
 
-    def query(self, name, unii):
+    def query(self, name, unii, filter_layers={'q', 'i', 'f', 'p', 't', 'm', 'b', 's'}):
         ingredient_matches_evidence = defaultdict(lambda :defaultdict(list))
 
         # structure matches
         if not unii in self.caches['structure']:
-            self.caches['structure'][unii] = self.lookup_ingredient_structure(unii)
+            self.caches['structure'][unii] = self.lookup_ingredient_structure(unii, filter_layers=filter_layers)
         inchi, structure_matches = self.caches['structure'][unii]
 
         if structure_matches:
