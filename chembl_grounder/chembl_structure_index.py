@@ -202,7 +202,7 @@ class ChemblStructureIndex():
         stripped_inchi = ic.strip_inchi(inchi, exclude_inchis=self.conn_split_inactive_inchis)  # filter inchi
         return bool(stripped_inchi)
     
-    def query(self, inchi, connectivity=True, strip=True, consistency=True, split=True, inactive=False):
+    def query(self, inchi, connectivity=True, strip=True, consistency=True, split=True, inactive=False, filter_layers={'h','f','p','q','i','t','b','m','s'}):
         if strip:
             try:
                 stripped_inchi = ic.strip_inchi(inchi, exclude_inchis=self.conn_split_inactive_inchis)  # filter inchi
@@ -240,9 +240,70 @@ class ChemblStructureIndex():
             consistencies = {}
             for i in r:
                 r_inchi = self.get_structure(i)  # get inchi
-                consistencies[i] = ic.compare_consistent(inchi, r_inchi, filter_layers={'h','f','p','q','i','t','b','m','s'})  # compare with query to get consistency
+#                 consistencies[i] = ic.compare_consistent(inchi, r_inchi, filter_layers=filter_layers)  # compare with query to get consistency
+                consistencies[i] = self.inchi_overlap(inchi, r_inchi, strip=strip, consistency=consistency, filter_layers=filter_layers)
             return consistencies
         else:
             return r
     
-    
+    def inchi_overlap(self, inchi1, inchi2, strip=True, consistency=True, filter_layers={'h','f','p','q','i','t','b','m','s'}):
+        def split_strip(inchi, strip=True):
+            mol = rdkit.Chem.MolFromInchi(inchi)
+            split_inchis = set()
+            for m in rdkit.Chem.rdmolops.GetMolFrags(mol, asMols=True):  # split
+                i = rdkit.Chem.MolToInchi(m)
+
+                if strip:
+                    c = ic.inchi_conn_layer(i)
+                    if not c in self.conn_split_inactive_inchis:
+                        split_inchis.add(i)
+                else:
+                    split_inchis.add(i)
+
+            return split_inchis
+
+        if isinstance(inchi1, list):
+            inchi1 = set(inchi1)
+        if isinstance(inchi2, list):
+            inchi2 = set(inchi2)
+
+        if isinstance(inchi1, set):
+            split_inchis1 = set(inchi1)
+        else:
+            split_inchis1 = split_strip(inchi1, strip=strip)
+
+        if isinstance(inchi2, set):
+            split_inchis2 = set(inchi2)
+        else:
+            split_inchis2 = split_strip(inchi2, strip=strip)
+
+        # get conn layer
+        conn_split_inchis1 = defaultdict(set)
+        for i in split_inchis1:
+            conn_split_inchis1[ic.inchi_conn_layer(i)].add(i)
+        conn_split_inchis2 = defaultdict(set)
+        for i in split_inchis2:
+            conn_split_inchis2[ic.inchi_conn_layer(i)].add(i)
+
+        # compare conn layers to get candidate matches
+        candidates = set()
+        for k in set(conn_split_inchis1.keys()) & set(conn_split_inchis2.keys()):
+            candidates.update(it.product(conn_split_inchis1[k], conn_split_inchis2[k]))
+
+        # check these candidate matches by chacking consistency
+        matches = set()
+        for i1,i2 in candidates:
+            if consistency:
+                c,s = ic.compare_consistent(i1, i2, filter_layers=filter_layers)
+                if c:
+                    matches.add((i1,i2))
+            else:
+                if i1==i2:
+                    matches.add((i1,i2))
+
+        # return overlap between the split inchi fragments
+        i1_matches = {i1 for (i1,i2) in matches}
+        i2_matches = {i2 for (i1,i2) in matches}
+        overlap = i1_matches | i2_matches
+
+        return split_inchis1-overlap, matches, split_inchis2-overlap  # remainder from inchi1, paired matches, remainder from inchi2
