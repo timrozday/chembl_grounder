@@ -102,7 +102,8 @@ class ChemblGrounder():
     def pick_top_chembl_ident(self, chembl_idents, pref_drugbase_sources={'ORANGE BOOK', 'FDA (NOT ORANGE BOOK)'}):
         def score(chembl_ident):  # sort by: inchi, drugbase, inchi length
             inchi = self.structure_index.get_structure(chembl_ident)
-            return (self.chembl_index.get_phase(chembl_ident),
+            phase = self.chembl_index.get_phase(chembl_ident)
+            return (-1 if phase is None else phase,
                     1 if chembl_ident.drugbase_id else 0, 
                     1 if (self.chembl_index.get_sources(chembl_ident.drugbase_id) & pref_drugbase_sources) else 0, 
                     1 if inchi else 0, 
