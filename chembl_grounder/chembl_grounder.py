@@ -173,6 +173,38 @@ class ChemblGrounder():
         results = {k1:{k2:v2 for k2,v2 in v1.items()} for k1,v1 in results.items()}
         return results
 
+    def get_pref_chembl_compound(self, ci):
+        candidates = {ci}
+
+        # expand by chembl rels
+        try:
+            candidates.update(self.chembl_index.get_children(ci))
+        except:
+            pass
+        try:
+            candidates.update(self.chembl_index.get_parents(ci))
+        except:
+            pass
+
+        # expand by structure
+        inchi = self.structure_index.get_structure(ci)  # get inchi
+        if inchi:
+            r = self.structure_index.query(
+                inchi,
+                connectivity=True,
+                strip=True,
+                consistency=True,
+                split=True,
+                inactive=False,
+                filter_layers={'s', 'f', 'q', 'm', 'i', 't', 'b', 'p'},  # 'h'
+            )
+            if r:
+                candidates.update(r.keys())
+
+        top_chembl_ident = self.pick_top_chembl_ident(candidates)
+
+        return top_chembl_ident, candidates
+    
     def query(self, name, unii, filter_layers={'q', 'i', 'f', 'p', 't', 'm', 'b', 's'}):
         ingredient_matches_evidence = defaultdict(lambda :defaultdict(list))
 
@@ -250,7 +282,7 @@ class ChemblGrounder():
             chembl_ident_evidence = {c:self.pick_top_evidence(e) for c,e in ingredient_matches_evidence.items()}
             top_evidence_score = min({s for c,(t,s) in chembl_ident_evidence.items()})
             top_chembl_ident = self.pick_top_chembl_ident({c for c,(t,s) in chembl_ident_evidence.items() if s==top_evidence_score})
-
+            top_chembl_ident,_ = self.get_pref_chembl_compound(top_chembl_ident)
             return top_chembl_ident, ingredient_matches_evidence
         
         else:
