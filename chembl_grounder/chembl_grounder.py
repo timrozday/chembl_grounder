@@ -205,7 +205,7 @@ class ChemblGrounder():
 
         return top_chembl_ident, candidates
     
-    def query(self, name, unii, filter_layers={'q', 'i', 'f', 'p', 't', 'm', 'b', 's'}):
+    def query(self, name, unii, filter_layers={'q', 'i', 'f', 'p', 't', 'm', 'b', 's'}, cache={}):
         ingredient_matches_evidence = defaultdict(lambda :defaultdict(list))
 
         # structure matches
@@ -282,8 +282,12 @@ class ChemblGrounder():
             chembl_ident_evidence = {c:self.pick_top_evidence(e) for c,e in ingredient_matches_evidence.items()}
             top_evidence_score = min({s for c,(t,s) in chembl_ident_evidence.items()})
             top_chembl_ident = self.pick_top_chembl_ident({c for c,(t,s) in chembl_ident_evidence.items() if s==top_evidence_score})
-            top_chembl_ident,_ = self.get_pref_chembl_compound(top_chembl_ident)
-            return top_chembl_ident, ingredient_matches_evidence
+            
+            if not top_chembl_ident in cache:
+                r,_ = self.get_pref_chembl_compound(top_chembl_ident)
+                cache[top_chembl_ident] = r
+                
+            return cache[top_chembl_ident], ingredient_matches_evidence, cache
         
         else:
-            return None, None
+            return None, None, cache
